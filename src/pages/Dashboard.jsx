@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import ImageLoader from '../assets/components/ImageLoader.jsx';
 
 export default function Dashboard() {
   const [assistencias, setAssistencias] = useState([]);
@@ -191,6 +192,10 @@ export default function Dashboard() {
       const finalImgWidthMm = imgWidthMm * scaleToFitWidth;
       const finalImgHeightMm = imgHeightMm * scaleToFitWidth;
 
+      // Prepare baseName once to avoid duplicate declarations
+      const baseName = `Relatorio_Assistencia_${filtroMesAno || 'todos'}`;
+
+      // If the scaled image fits in a single page, add it centered
       if (finalImgHeightMm <= pageHeight) {
         pdf.addImage(
           imgData,
@@ -200,7 +205,7 @@ export default function Dashboard() {
           finalImgWidthMm,
           finalImgHeightMm
         );
-        const baseName = `Relatorio_Assistencia_${filtroMesAno || 'todos'}`;
+
         pdf.save(`${sanitizeFileName(baseName)}.pdf`);
         showNotification('success', 'PDF gerado com sucesso.', 3000);
         return;
@@ -217,7 +222,7 @@ export default function Dashboard() {
         const tmpCanvas = document.createElement('canvas');
         tmpCanvas.width = imgWidthPx;
         tmpCanvas.height = sliceHeightPx;
-        const ctx = tmpCanvas.getContext('2d');
+        let ctx = tmpCanvas.getContext('2d');
 
         ctx.drawImage(canvas, 0, offsetY, imgWidthPx, sliceHeightPx, 0, 0, imgWidthPx, sliceHeightPx);
 
@@ -233,18 +238,10 @@ export default function Dashboard() {
           // clear pixels and release references
           ctx && ctx.clearRect(0, 0, tmpCanvas.width, tmpCanvas.height);
         } catch {}
-        // drop references
-        // eslint-disable-next-line no-param-reassign
-        // @note: setting to null helps GC in some engines
-        // but we must avoid reusing these variables afterwards
-        // so we simply let them go out of scope after this iteration
-        // (explicitly set to null as extra hint)
-        // eslint-disable-next-line no-unused-expressions
-        (ctx = null);
-        // eslint-disable-next-line no-unused-expressions
-        (tmpCanvas.width = 0);
-        // eslint-disable-next-line no-unused-expressions
-        (tmpCanvas.height = 0);
+        // drop references to help GC
+        ctx = null;
+        tmpCanvas.width = 0;
+        tmpCanvas.height = 0;
 
         remainingHeightPx -= sliceHeightPx;
         offsetY += sliceHeightPx;
@@ -256,7 +253,6 @@ export default function Dashboard() {
         await new Promise((resolve) => setTimeout(resolve, 20));
       }
 
-      const baseName = `Relatorio_Assistencia_${filtroMesAno || 'todos'}`;
       pdf.save(`${sanitizeFileName(baseName)}.pdf`);
       showNotification('success', 'PDF gerado com sucesso.', 3000);
     } catch (error) {
@@ -274,7 +270,7 @@ export default function Dashboard() {
       }
       // drop reference
       // eslint-disable-next-line no-unused-expressions
-      (canvas = null);
+      canvas = null;
       setIsExporting(false);
     }
   };
@@ -394,6 +390,13 @@ export default function Dashboard() {
           </table>
         </div>
       </section>
+
+      {/* Exibição da imagem/carrossel no topo */}
+      <div className="mt-6">
+        <div className="mb-6">
+          <ImageLoader />
+        </div>
+      </div>
     </div>
   );
 }
