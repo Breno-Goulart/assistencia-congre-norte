@@ -7,7 +7,7 @@ import {
   persistentMultipleTabManager
 } from 'firebase/firestore';
 
-// Configuração segura via Vite env
+// Leitura direta das variáveis expostas pelo Vite
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -17,10 +17,22 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Inicializa o app apenas uma vez
+// Validação simples em runtime (apenas em dev)
+if (import.meta.env.DEV) {
+  const missing = Object.entries(firebaseConfig)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+  if (missing.length) {
+    throw new Error(
+      `Firebase config missing environment variables: ${missing.join(', ')}`
+    );
+  }
+}
+
+// Inicializa o app apenas uma vez (protege contra HMR)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Auth
+// Auth export
 export const auth = getAuth(app);
 
 // Firestore com cache offline e suporte a múltiplas abas
