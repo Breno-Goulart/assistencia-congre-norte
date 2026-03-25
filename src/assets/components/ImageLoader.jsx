@@ -1,7 +1,7 @@
-// components/ImageLoader.js
+// src/assets/components/ImageLoader.jsx
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { db } from '../../services/firebase.js';
 import { Image as ImageIcon } from 'lucide-react';
 
 export default function ImageLoader({ docPath, fieldName = 'imageUrl', alt = 'Imagem' }) {

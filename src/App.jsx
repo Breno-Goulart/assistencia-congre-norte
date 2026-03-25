@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { PlusCircle, BarChart3, LogOut } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
-import Login from './pages/Login';
-import { auth } from './services/firebase';
-import Lancamento from './pages/Lancamento';
-import Dashboard from './pages/Dashboard';
+import Login from './pages/Login.jsx';
+import { auth } from './services/firebase.js';
+import Lancamento from './pages/Lancamento.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 import logoImg from './assets/logo.png';
 
 // TopMenu: menu responsivo dentro do main
@@ -81,8 +81,8 @@ function MenuLateral({ user }) {
           <button
             onClick={() =>
               import('firebase/auth')
-                .then(m => m.signOut(auth))
-                .catch(err => console.error('Erro ao sair:', err))
+                .then((m) => m.signOut(auth))
+                .catch((err) => console.error('Erro ao sair:', err))
             }
             className="flex items-center gap-2 text-blue-300 hover:text-white transition w-full"
           >

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { db } from '../services/firebase.js';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import ImageLoader from '../assets/components/ImageLoader';
+import ImageLoader from '../assets/components/ImageLoader.jsx';
 
 export default function Lancamento() {
   const [formData, setFormData] = useState({
