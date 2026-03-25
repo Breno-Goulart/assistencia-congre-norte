@@ -8,7 +8,33 @@ import Lancamento from './pages/Lancamento';
 import Dashboard from './pages/Dashboard';
 import logoImg from './assets/logo.png';
 
-// Componente para detectar a rota ativa e pintar o menu
+// TopMenu: menu responsivo que fica dentro do main (horizontal em mobile, vertical em md)
+function TopMenu({ user }) {
+  const location = useLocation();
+  const isLancamento = location.pathname === '/';
+
+  return (
+    <div className="flex flex-row md:flex-col justify-around md:justify-start w-full md:w-auto p-2 md:p-4 gap-1 md:gap-2">
+      <Link
+        to="/"
+        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'}`}
+      >
+        <PlusCircle size={24} />
+        <span className="text-[11px] md:text-base font-medium">Lançamento</span>
+      </Link>
+
+      <Link
+        to={user ? '/dashboard' : '/login'}
+        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${!isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'}`}
+      >
+        <BarChart3 size={24} />
+        <span className="text-[11px] md:text-base font-medium">{user ? 'Painel' : 'Acesso Restrito'}</span>
+      </Link>
+    </div>
+  );
+}
+
+// MenuLateral: sidebar fixo (usa useLocation internamente para destacar rota)
 function MenuLateral({ user }) {
   const location = useLocation();
   const isLancamento = location.pathname === '/';
@@ -44,7 +70,6 @@ function MenuLateral({ user }) {
 
       <div className="p-4 border-t border-blue-800 text-sm">
         {user ? (
-          // Carrega signOut dinamicamente ao clicar (code-splitting)
           <button
             onClick={() => import('firebase/auth').then(m => m.signOut(auth)).catch(err => console.error('Erro ao sair:', err))}
             className="flex items-center gap-2 text-blue-300 hover:text-white transition w-full"
@@ -66,7 +91,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Apenas escuta o estado da autenticação (removemos o signInAnonymously)
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -87,13 +111,18 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
         <MenuLateral user={user} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <Routes>
-            <Route path="/" element={<Lancamento />} />
-            <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-            <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+        <main className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8 w-full max-w-6xl mx-auto">
+          {/* TopMenu inserido dentro do main */}
+          <TopMenu user={user} />
+
+          <div className="mt-4">
+            <Routes>
+              <Route path="/" element={<Lancamento />} />
+              <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+              <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </div>
         </main>
       </div>
     </BrowserRouter>

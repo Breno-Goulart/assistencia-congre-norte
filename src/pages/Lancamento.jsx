@@ -12,21 +12,26 @@ export default function Lancamento() {
     assistenciaZoom: '',
     assistenciaPresencial: ''
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
 
   // Cálculo automático do Total Geral
-  const zoom = parseInt(formData.assistenciaZoom) || 0;
-  const presencial = parseInt(formData.assistenciaPresencial) || 0;
+  const zoom = parseInt(formData.assistenciaZoom, 10) || 0;
+  const presencial = parseInt(formData.assistenciaPresencial, 10) || 0;
   const totalGeral = zoom + presencial;
 
+  const inputBaseClass = "w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all";
+  const controlClass = "w-full p-4 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all shadow-sm";
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (zoom < 0 || presencial < 0) {
       setStatus({ type: 'error', message: 'Os valores não podem ser negativos.' });
       return;
@@ -43,10 +48,19 @@ export default function Lancamento() {
         totalGeral,
         dataCriacao: new Date().toISOString(),
       });
-      
+
       setStatus({ type: 'success', message: 'Assistência registrada com sucesso!' });
-      // Limpa os números, mas mantém a data e os nomes para facilitar novos lançamentos
+      // Limpa apenas os campos numéricos, mantendo data/tipo/indicadores
       setFormData(prev => ({ ...prev, assistenciaZoom: '', assistenciaPresencial: '' }));
+
+      // Feedback tátil em dispositivos que suportam vibrar
+      if (window.navigator && window.navigator.vibrate) {
+        try {
+          window.navigator.vibrate([50, 50, 50]);
+        } catch (err) {
+          // ignore vibration errors
+        }
+      }
     } catch (error) {
       console.error("Erro ao salvar:", error);
       setStatus({ type: 'error', message: 'Falha ao registrar. Verifique sua conexão.' });
@@ -59,18 +73,37 @@ export default function Lancamento() {
   useEffect(() => {
     if (!status.message) return;
     const timer = setTimeout(() => setStatus({ type: '', message: '' }), 4000);
-    return () => clearTimeout(timer); // Limpa o timer se o componente desmontar
+    return () => clearTimeout(timer);
   }, [status.message]);
 
   return (
     <div className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8">
+      {/* Hero / Banner */}
+      <div className="mb-8">
+        <div className="w-full h-40 sm:h-52 mb-4 rounded-2xl overflow-hidden shadow-sm bg-gray-200 relative">
+          <img
+            src="https://images.unsplash.com/photo-1438283173091-5dbf5c5a3206?q=80&w=800&auto=format&fit=crop"
+            alt="Reunião"
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent flex items-end p-5">
+            <h2 className="text-2xl font-bold text-white drop-shadow-md">Novo Lançamento</h2>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 px-1">Preencha os dados de assistência da reunião atual.</p>
+      </div>
+
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Novo Lançamento</h2>
         <p className="text-sm text-gray-500 mt-1">Registre a assistência da reunião.</p>
       </div>
 
       {status.message && (
-        <div className={`p-4 mb-6 rounded-lg text-sm font-medium ${status.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+        <div
+          role="status"
+          className={`p-4 mb-6 rounded-lg text-sm font-medium ${status.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}
+        >
           {status.message}
         </div>
       )}
@@ -78,12 +111,25 @@ export default function Lancamento() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1">
           <label className="text-sm font-semibold text-gray-700">Data</label>
-          <input type="date" name="dataReuniao" value={formData.dataReuniao} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all" required />
+          <input
+            type="date"
+            name="dataReuniao"
+            value={formData.dataReuniao}
+            onChange={handleChange}
+            className={controlClass}
+            required
+          />
         </div>
 
         <div className="space-y-1">
           <label className="text-sm font-semibold text-gray-700">Tipo de Reunião</label>
-          <select name="tipoReuniao" value={formData.tipoReuniao} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all" required>
+          <select
+            name="tipoReuniao"
+            value={formData.tipoReuniao}
+            onChange={handleChange}
+            className={controlClass}
+            required
+          >
             <option value="Meio de Semana">Meio de Semana</option>
             <option value="Fim de Semana">Fim de Semana</option>
             <option value="Visita do Superintendente">Visita do Superintendente</option>
@@ -104,7 +150,7 @@ export default function Lancamento() {
               value={formData.assistenciaZoom}
               onChange={handleChange}
               placeholder="Ex: 45"
-              className="w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              className={inputBaseClass}
               required
             />
           </div>
@@ -120,7 +166,7 @@ export default function Lancamento() {
               value={formData.assistenciaPresencial}
               onChange={handleChange}
               placeholder="Ex: 85"
-              className="w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              className={inputBaseClass}
               required
             />
           </div>
@@ -129,7 +175,13 @@ export default function Lancamento() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-sm font-semibold text-gray-700">Indicador (Entrada)</label>
-            <select name="indicadorEntrada" value={formData.indicadorEntrada} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white" required>
+            <select
+              name="indicadorEntrada"
+              value={formData.indicadorEntrada}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white"
+              required
+            >
               <option value="" disabled>Selecione...</option>
               <option value="Irmão A">Irmão A</option>
               <option value="Irmão B">Irmão B</option>
@@ -139,7 +191,13 @@ export default function Lancamento() {
           </div>
           <div className="space-y-1">
             <label className="text-sm font-semibold text-gray-700">Indicador (Auditório)</label>
-            <select name="indicadorAuditorio" value={formData.indicadorAuditorio} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white" required>
+            <select
+              name="indicadorAuditorio"
+              value={formData.indicadorAuditorio}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white"
+              required
+            >
               <option value="" disabled>Selecione...</option>
               <option value="Irmão C">Irmão C</option>
               <option value="Irmão D">Irmão D</option>
@@ -154,16 +212,16 @@ export default function Lancamento() {
           <span className="text-5xl font-black text-blue-600">{totalGeral}</span>
         </div>
 
-        <button 
-          type="submit" 
-          disabled={isSubmitting} 
+        <button
+          type="submit"
+          disabled={isSubmitting}
           className="w-full py-4 mt-2 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <Loader2 className="animate-spin" size={24} />
           ) : (
             <span className="flex items-center gap-2">
-              <CheckCircle2 size={24} /> 
+              <CheckCircle2 size={24} />
               <span>Registrar Assistência</span>
             </span>
           )}
