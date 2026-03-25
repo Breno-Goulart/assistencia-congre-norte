@@ -59,7 +59,7 @@ export default function Lancamento() {
   useEffect(() => {
     if (!status.message) return;
     const timer = setTimeout(() => setStatus({ type: '', message: '' }), 4000);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timer); // Limpa o timer se o componente desmontar
   }, [status.message]);
 
   return (
@@ -94,11 +94,35 @@ export default function Lancamento() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-sm font-semibold text-gray-700">Zoom</label>
-            <input type="number" min="0" max="1000" name="assistenciaZoom" value={formData.assistenciaZoom} onChange={handleChange} placeholder="Ex: 45" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all" required />
+            <input
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              min="0"
+              max="1000"
+              name="assistenciaZoom"
+              value={formData.assistenciaZoom}
+              onChange={handleChange}
+              placeholder="Ex: 45"
+              className="w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              required
+            />
           </div>
           <div className="space-y-1">
             <label className="text-sm font-semibold text-gray-700">Presencial</label>
-            <input type="number" min="0" max="1000" name="assistenciaPresencial" value={formData.assistenciaPresencial} onChange={handleChange} placeholder="Ex: 85" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all" required />
+            <input
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              min="0"
+              max="1000"
+              name="assistenciaPresencial"
+              value={formData.assistenciaPresencial}
+              onChange={handleChange}
+              placeholder="Ex: 85"
+              className="w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              required
+            />
           </div>
         </div>
 

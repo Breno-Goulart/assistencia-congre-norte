@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { PlusCircle, BarChart3, LogOut } from 'lucide-react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import Login from './pages/Login';
 import { auth } from './services/firebase';
 import Lancamento from './pages/Lancamento';
@@ -13,17 +13,8 @@ function MenuLateral({ user }) {
   const location = useLocation();
   const isLancamento = location.pathname === '/';
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      // onAuthStateChanged no App irá atualizar o estado do usuário
-    } catch (error) {
-      console.error('Erro ao sair:', error);
-    }
-  };
-
   return (
-    <nav className="bg-blue-900 text-white w-full md:w-64 flex md:flex-col justify-between shadow-xl flex-shrink-0 z-10">
+    <nav className="bg-blue-900 text-white w-full md:w-64 flex md:flex-col justify-between shadow-xl flex-shrink-0 order-last md:order-first z-50 fixed bottom-0 md:relative">
       <div>
         <div className="p-6 border-b border-blue-800 flex items-center gap-3">
           <img src={logoImg} alt="Logo Assistência Norte" className="w-10 h-10 object-contain" />
@@ -51,22 +42,21 @@ function MenuLateral({ user }) {
         </div>
       </div>
 
-      {user ? (
-        <div className="p-4 border-t border-blue-800 text-sm">
+      <div className="p-4 border-t border-blue-800 text-sm">
+        {user ? (
+          // Carrega signOut dinamicamente ao clicar (code-splitting)
           <button
-            onClick={handleSignOut}
+            onClick={() => import('firebase/auth').then(m => m.signOut(auth)).catch(err => console.error('Erro ao sair:', err))}
             className="flex items-center gap-2 text-blue-300 hover:text-white transition w-full"
           >
-            <LogOut size={16} /> Sair do Sistema
+            <LogOut size={16} /> Sair
           </button>
-        </div>
-      ) : (
-        <div className="p-4 border-t border-blue-800 text-sm">
+        ) : (
           <Link to="/login" className="text-blue-300 hover:text-white transition">
             Entrar
           </Link>
-        </div>
-      )}
+        )}
+      </div>
     </nav>
   );
 }
@@ -76,6 +66,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Apenas escuta o estado da autenticação (removemos o signInAnonymously)
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -98,7 +89,7 @@ export default function App() {
         <MenuLateral user={user} />
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <Routes>
-            <Route path="/" element={<Lancamento user={user} />} />
+            <Route path="/" element={<Lancamento />} />
             <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
             <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
             <Route path="*" element={<Navigate to="/" />} />

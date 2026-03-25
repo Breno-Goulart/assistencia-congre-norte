@@ -41,14 +41,33 @@ export default function Login() {
       <form onSubmit={handleLogin} className="space-y-5">
         <div className="space-y-1">
           <label className="text-sm font-semibold text-gray-700">E-mail</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none" required />
+          <input
+            type="email"
+            value={email}
+            autoComplete="username"
+            inputMode="email"
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+            required
+          />
         </div>
         <div className="space-y-1">
           <label className="text-sm font-semibold text-gray-700">Senha</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none" required />
+          <input
+            type="password"
+            value={password}
+            autoComplete="current-password"
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+            required
+          />
         </div>
         
-        <button type="submit" disabled={loading} className="w-full py-3 rounded-lg font-bold text-white bg-gray-900 hover:bg-black transition-colors flex justify-center items-center gap-2">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 rounded-lg font-bold text-white bg-gray-900 hover:bg-black transition-colors flex justify-center items-center gap-2"
+        >
           {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar no Painel'}
         </button>
       </form>
