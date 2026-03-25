@@ -6,8 +6,9 @@ import {
   persistentLocalCache,
   persistentMultipleTabManager
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
-// Leitura direta das variáveis expostas pelo Vite
+// Configuração do Firebase usando variáveis do Vite
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -32,10 +33,9 @@ if (import.meta.env.DEV) {
 // Inicializa o app apenas uma vez (protege contra HMR)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Auth export
+// Exports
 export const auth = getAuth(app);
-
-// Firestore com cache offline e suporte a múltiplas abas
+export const storage = getStorage(app);
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
