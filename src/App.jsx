@@ -16,8 +16,8 @@ function MenuLateral({ user }) {
   return (
     <nav className="bg-blue-900 text-white w-full md:w-64 flex md:flex-col justify-between shadow-xl flex-shrink-0 order-last md:order-first z-50 fixed bottom-0 md:relative">
       <div>
-        {/* Logo e Identidade (Desktop) */}
-        <div className="p-4 md:p-6 md:border-b border-blue-800 flex items-center justify-center md:justify-start gap-3">
+        {/* Logo e Identidade com Link Secreto */}
+        <div className="p-4 md:p-6 md:border-b border-blue-800 flex items-center justify-center md:justify-start gap-3 relative group">
           <Link to={user ? "/dashboard" : "/login"} title="Acesso Restrito">
             <img src={logoImg} alt="Logo Assistência Norte" className="w-10 h-10 object-contain cursor-pointer" />
           </Link>
@@ -26,6 +26,13 @@ function MenuLateral({ user }) {
             <br />
             <span className="text-sm font-normal text-blue-300">Norte</span>
           </h1>
+          
+          {/* Link Secreto para Login (Invisível) */}
+          <Link 
+            to="/login" 
+            className="absolute top-0 right-0 w-10 h-10 opacity-0 cursor-default"
+            aria-hidden="true"
+          />
         </div>
 
         {/* Links de Navegação Primária */}
