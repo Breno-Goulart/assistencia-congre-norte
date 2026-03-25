@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../services/firebase.js';
+import { db } from '../services/firebase';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function Lancamento() {
@@ -125,8 +125,20 @@ export default function Lancamento() {
           <span className="text-5xl font-black text-blue-600">{totalGeral}</span>
         </div>
 
-        <button type="submit" disabled={isSubmitting} className="w-full py-4 mt-2 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
-          {isSubmitting ? <Loader2 className="animate-spin" size={24} /> : <><CheckCircle2 size={24} /> Registrar Assistência</>}
+        <button 
+          type="submit" 
+          disabled={isSubmitting} 
+          className="w-full py-4 mt-2 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? (
+            <Loader2 className="animate-spin" size={24} />
+          ) : (
+            <span className="flex items-center gap-2">
+              <CheckCircle2 size={24} /> 
+              {/* CORREÇÃO: Texto envolvido em span previne o erro removeChild causado por tradutores */}
+              <span>Registrar Assistência</span>
+            </span>
+          )}
         </button>
       </form>
     </div>

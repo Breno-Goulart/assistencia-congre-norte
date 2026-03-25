@@ -37,20 +37,27 @@ function MenuLateral() {
   );
 }
 
+// ... (mantenha os imports e os outros componentes como MenuLateral iguais)
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    signInAnonymously(auth);
+    // CORREÇÃO: Tratamento de erro adicionado para não quebrar a UI
+    signInAnonymously(auth).catch((error) => {
+      console.warn('Aviso: Login anônimo falhou. Verifique o Firebase Console.', error.message);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
+    
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <div className="flex h-screen items-center justify-center">A carregar Sistema...</div>;
+  if (loading) return <div className="flex h-screen items-center justify-center font-bold text-gray-500 animate-pulse">A carregar Sistema...</div>;
 
   return (
     <BrowserRouter>
