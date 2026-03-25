@@ -195,10 +195,21 @@ export default function Lancamento() {
           <span className="text-5xl font-black text-blue-600">{totalGeral}</span>
         </div>
 
+        <div className="w-full h-48 rounded-xl overflow-hidden mt-2">
+          {/* Imagem limpa de auditório/arquitetura, leve (w=800) e compactada (q=80) */}
+          <img
+            src="https://images.unsplash.com/photo-1577416412292-747c6607f055?q=80&w=800&auto=format&fit=crop"
+            alt="Salão"
+            className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+            loading="lazy"
+          />
+        </div>
+
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-4 mt-2 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+          // active:scale-[0.98] cria a sensação física de "apertar" um botão nativo
+          className="w-full py-4 mt-4 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
         >
           {isSubmitting ? (
             <Loader2 className="animate-spin" size={24} />
