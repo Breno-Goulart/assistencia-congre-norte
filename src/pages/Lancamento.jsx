@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { CheckCircle2, Loader2 } from 'lucide-react';
@@ -17,58 +17,64 @@ export default function Lancamento() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
 
-  // cálculo automático do total
-  const zoom = parseInt(formData.assistenciaZoom, 10) || 0;
-  const presencial = parseInt(formData.assistenciaPresencial, 10) || 0;
-  const totalGeral = zoom + presencial;
+  const zoom = Number(formData.assistenciaZoom) || 0;
+  const presencial = Number(formData.assistenciaPresencial) || 0;
+
+  const totalGeral = useMemo(() => zoom + presencial, [zoom, presencial]);
 
   const inputBaseClass =
     'w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all';
   const controlClass =
     'w-full p-4 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all shadow-sm';
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
 
-    if (zoom < 0 || presencial < 0) {
-      setStatus({ type: 'error', message: 'Os valores não podem ser negativos.' });
-      return;
-    }
+      const z = Math.max(0, Number(formData.assistenciaZoom) || 0);
+      const p = Math.max(0, Number(formData.assistenciaPresencial) || 0);
 
-    setIsSubmitting(true);
-    setStatus({ type: '', message: '' });
-
-    try {
-      await addDoc(collection(db, 'assistencias'), {
-        ...formData,
-        assistenciaZoom: zoom,
-        assistenciaPresencial: presencial,
-        totalGeral,
-        dataCriacao: new Date().toISOString(),
-      });
-
-      setStatus({ type: 'success', message: 'Assistência registrada com sucesso!' });
-      setFormData((prev) => ({ ...prev, assistenciaZoom: '', assistenciaPresencial: '' }));
-
-      if (window.navigator && window.navigator.vibrate) {
-        try {
-          window.navigator.vibrate([50, 50, 50]);
-        } catch {
-          // ignore
-        }
+      if (!Number.isFinite(z) || !Number.isFinite(p)) {
+        setStatus({ type: 'error', message: 'Valores inválidos.' });
+        return;
       }
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
-      setStatus({ type: 'error', message: 'Falha ao registrar. Verifique sua conexão.' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+
+      setIsSubmitting(true);
+      setStatus({ type: '', message: '' });
+
+      try {
+        await addDoc(collection(db, 'assistencias'), {
+          ...formData,
+          assistenciaZoom: z,
+          assistenciaPresencial: p,
+          totalGeral: z + p,
+          dataCriacao: new Date().toISOString()
+        });
+
+        setStatus({ type: 'success', message: 'Assistência registrada com sucesso!' });
+        setFormData((prev) => ({ ...prev, assistenciaZoom: '', assistenciaPresencial: '' }));
+
+        if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+          try {
+            window.navigator.vibrate([50, 50, 50]);
+          } catch (err) {
+            // ignore
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao salvar:', error);
+        setStatus({ type: 'error', message: 'Falha ao registrar. Verifique sua conexão.' });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [formData]
+  );
 
   useEffect(() => {
     if (!status.message) return;
@@ -91,10 +97,9 @@ export default function Lancamento() {
       {status.message && (
         <div
           role="status"
+          aria-live="polite"
           className={`p-4 mb-6 rounded-lg text-sm font-medium ${
-            status.type === 'error'
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-green-50 text-green-700 border border-green-200'
+            status.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
           }`}
         >
           {status.message}
@@ -103,8 +108,9 @@ export default function Lancamento() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1">
-          <label className="text-sm font-semibold text-gray-700">Data</label>
+          <label htmlFor="dataReuniao" className="text-sm font-semibold text-gray-700">Data</label>
           <input
+            id="dataReuniao"
             type="date"
             name="dataReuniao"
             value={formData.dataReuniao}
@@ -115,8 +121,9 @@ export default function Lancamento() {
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-semibold text-gray-700">Tipo de Reunião</label>
+          <label htmlFor="tipoReuniao" className="text-sm font-semibold text-gray-700">Tipo de Reunião</label>
           <select
+            id="tipoReuniao"
             name="tipoReuniao"
             value={formData.tipoReuniao}
             onChange={handleChange}
@@ -132,9 +139,12 @@ export default function Lancamento() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700">Zoom</label>
+            <label htmlFor="assistenciaZoom" className="text-sm font-semibold text-gray-700">Zoom</label>
             <input
+              id="assistenciaZoom"
               type="number"
+              inputMode="numeric"
+              step="1"
               min="0"
               max="1000"
               name="assistenciaZoom"
@@ -146,9 +156,12 @@ export default function Lancamento() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700">Presencial</label>
+            <label htmlFor="assistenciaPresencial" className="text-sm font-semibold text-gray-700">Presencial</label>
             <input
+              id="assistenciaPresencial"
               type="number"
+              inputMode="numeric"
+              step="1"
               min="0"
               max="1000"
               name="assistenciaPresencial"
@@ -163,8 +176,9 @@ export default function Lancamento() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700">Indicador (Entrada)</label>
+            <label htmlFor="indicadorEntrada" className="text-sm font-semibold text-gray-700">Indicador (Entrada)</label>
             <select
+              id="indicadorEntrada"
               name="indicadorEntrada"
               value={formData.indicadorEntrada}
               onChange={handleChange}
@@ -179,8 +193,9 @@ export default function Lancamento() {
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700">Indicador (Auditório)</label>
+            <label htmlFor="indicadorAuditorio" className="text-sm font-semibold text-gray-700">Indicador (Auditório)</label>
             <select
+              id="indicadorAuditorio"
               name="indicadorAuditorio"
               value={formData.indicadorAuditorio}
               onChange={handleChange}
@@ -204,4 +219,18 @@ export default function Lancamento() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-4 mt-4 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700
+          className="w-full py-4 mt-4 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+        >
+          {isSubmitting ? (
+            <Loader2 className="animate-spin" size={24} />
+          ) : (
+            <span className="flex items-center gap-2">
+              <CheckCircle2 size={24} />
+              <span>Registrar Assistência</span>
+            </span>
+          )}
+        </button>
+      </form>
+    </div>
+  );
+}
