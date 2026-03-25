@@ -96,14 +96,17 @@ export default function Lancamento() {
 
   return (
     <div className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8">
-      <div className="mb-6">
-        <ImageLoader docPath="settings/banner" fieldName="url" alt="Capa" />
-        <p className="text-sm text-gray-500 px-1 mt-2">Preencha os dados de assistência da reunião atual.</p>
-      </div>
-
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Novo Lançamento</h2>
-        <p className="text-sm text-gray-500 mt-1">Registre a assistência da reunião.</p>
+      {/* Header com Banner e Título sobreposto */}
+      <div className="mb-8">
+        <div className="w-full h-48 sm:h-64 rounded-2xl overflow-hidden shadow-md relative mb-4 bg-gray-200">
+          <ImageLoader docPath="settings/banner" fieldName="url" alt="Capa" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/30 to-transparent flex items-end p-5 pointer-events-none">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">Novo Lançamento</h2>
+              <p className="text-sm text-gray-200 mt-1 drop-shadow">Registre a assistência da reunião atual.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {status.message && (
