@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { CheckCircle2, Loader2 } from 'lucide-react';
@@ -47,8 +47,6 @@ export default function Lancamento() {
       setStatus({ type: 'success', message: 'Assistência registrada com sucesso!' });
       // Limpa os números, mas mantém a data e os nomes para facilitar novos lançamentos
       setFormData(prev => ({ ...prev, assistenciaZoom: '', assistenciaPresencial: '' }));
-      
-      setTimeout(() => setStatus({ type: '', message: '' }), 4000);
     } catch (error) {
       console.error("Erro ao salvar:", error);
       setStatus({ type: 'error', message: 'Falha ao registrar. Verifique sua conexão.' });
@@ -56,6 +54,13 @@ export default function Lancamento() {
       setIsSubmitting(false);
     }
   };
+
+  // Limpa automaticamente a mensagem de status após 4s e previne vazamento de memória
+  useEffect(() => {
+    if (!status.message) return;
+    const timer = setTimeout(() => setStatus({ type: '', message: '' }), 4000);
+    return () => clearTimeout(timer);
+  }, [status.message]);
 
   return (
     <div className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8">
@@ -135,7 +140,6 @@ export default function Lancamento() {
           ) : (
             <span className="flex items-center gap-2">
               <CheckCircle2 size={24} /> 
-              {/* CORREÇÃO: Texto envolvido em span previne o erro removeChild causado por tradutores */}
               <span>Registrar Assistência</span>
             </span>
           )}
