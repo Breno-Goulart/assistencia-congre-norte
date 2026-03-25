@@ -1,18 +1,34 @@
-// Arquivo: src/services/firebase.js
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager 
+} from 'firebase/firestore';
 
-// Suas credenciais oficiais do Firebase:
+// 1. Configuração Segura
+// Lemos as credenciais diretamente das variáveis de ambiente injetadas pelo Vite
 const firebaseConfig = {
-  apiKey: "AIzaSyCzH--nHZ8aXETjnnRLOVl7eu2MEmFMGfo",
-  authDomain: "assistencia-congre-norte.firebaseapp.com",
-  projectId: "assistencia-congre-norte",
-  storageBucket: "assistencia-congre-norte.firebasestorage.app",
-  messagingSenderId: "438599349567",
-  appId: "1:438599349567:web:cb821e50215bc419d74f8a"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// 2. Inicialização Principal do Firebase
 const app = initializeApp(firebaseConfig);
+
+// 3. Inicialização do Auth (Autenticação)
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// 4. Inicialização do Firestore com Cache Offline Avançado
+// Substituímos o 'getFirestore()' padrão por 'initializeFirestore' para podermos injetar configurações
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    // Permite que o cache offline funcione de forma segura mesmo se o usuário 
+    // abrir o aplicativo em múltiplas abas do navegador ao mesmo tempo.
+    tabManager: persistentMultipleTabManager()
+  })
+});
