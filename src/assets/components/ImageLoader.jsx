@@ -4,6 +4,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../../services/firebase.js';
 import { Image as ImageIcon, Camera, Loader2 } from 'lucide-react';
 
+/**
+ * Componente ImageLoader
+ * Carrega e exibe imagens do Firestore com suporte a cache local e upload (Admin).
+ */
 export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner' }) {
   const cacheKey = `imgCache_${docPath}_${fieldName}`;
   
@@ -14,7 +18,7 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // 1. Garantir Estado de Autenticação
+  // 1. Monitoramento do Estado de Autenticação
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -22,11 +26,13 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
     return () => unsubscribe();
   }, []);
 
-  // 2. Corrigir e Proteger o onSnapshot
+  // 2. Sincronização em Tempo Real (Protegida)
   useEffect(() => {
-    // Definimos a referência fora para uso consistente
+    if (!docPath) return;
+
     const docRef = doc(db, docPath);
 
+    // Escuta mudanças no documento para atualizar a imagem automaticamente
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {
@@ -44,9 +50,9 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
       },
       (error) => {
         if (error.code === 'permission-denied') {
-          console.error("Acesso negado: sem permissão para ler a imagem.");
+          console.error("Acesso negado ao Firestore: verifique as regras de segurança.");
         } else {
-          console.error("Erro ao carregar imagem:", error);
+          console.error("Erro ao carregar imagem em tempo real:", error);
         }
         setLoading(false);
       }
@@ -55,23 +61,24 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
     return () => unsubscribe();
   }, [docPath, fieldName, cacheKey]);
 
-  // 3. Proteger a Função de Upload / updateDoc
+  // 3. Função de Upload com Validação de Segurança
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    
-    if (!user) {
-      console.error("Upload bloqueado: usuário não autenticado.");
-      return;
-    }
-
     if (!file) return;
 
-    // Limite de 1MB para documentos Firestore
-    if (file.size > 1048487) {
-      console.warn("Arquivo muito grande. O limite do Firestore é de aproximadamente 1MB.");
+    // VALIDAÇÃO: Bloqueia no frontend se não estiver autenticado
+    if (!auth.currentUser || !user) {
+      console.error("Upload bloqueado: usuário não autenticado.");
+      return; 
+    }
+
+    // Alerta sobre o limite de tamanho do Firestore (aprox. 1MB por documento)
+    if (file.size > 1000000) {
+      console.warn("Aviso: O arquivo excede 1MB. O Firestore pode rejeitar a gravação.");
     }
 
     setIsUploading(true);
+
     try {
       const reader = new FileReader();
       
@@ -80,35 +87,38 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
           const base64 = event.target.result;
           const docRef = doc(db, docPath);
           
+          // Gravação direta no documento do Firestore
           await updateDoc(docRef, { 
             [fieldName]: base64,
-            ultimaAtualizacao: new Date().toISOString()
+            ultimaAtualizacao: new Date().toISOString(),
+            atualizadoPor: user.uid
           });
           
           setIsUploading(false);
         } catch (error) {
+          console.error("Erro ao salvar no Firestore:", error);
           if (error.code === 'permission-denied') {
-            console.error("Acesso negado: você não tem permissão de escrita.");
-          } else {
-            console.error("Erro ao atualizar Firestore:", error);
+            // Em ambiente iframe/canvas, alert() pode não ser visível, 
+            // mas mantemos o log para depuração técnica.
+            console.error("Permissão de escrita negada para este usuário.");
           }
           setIsUploading(false);
         }
       };
 
       reader.onerror = (err) => {
-        console.error("Erro na leitura do arquivo:", err);
+        console.error("Erro na leitura do arquivo local:", err);
         setIsUploading(false);
       };
 
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Erro no processamento da imagem:', error);
+      console.error('Erro crítico no fluxo de processamento:', error);
       setIsUploading(false);
     }
   };
 
-  // Renderização: Estado de Carregamento
+  // Renderização: Estado de Carregamento Inicial
   if (loading && !imageUrl) {
     return (
       <div className="absolute inset-0 w-full h-full bg-gray-100 animate-pulse flex items-center justify-center text-gray-400">
@@ -117,9 +127,9 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
     );
   }
 
-  // Renderização Principal
   return (
     <div className="absolute inset-0 w-full h-full group overflow-hidden">
+      {/* Exibição da Imagem ou Placeholder */}
       {imageUrl ? (
         <img
           src={imageUrl}
@@ -130,13 +140,13 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
       ) : (
         <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-400 gap-2">
           <ImageIcon size={40} strokeWidth={1.5} />
-          <span className="text-sm font-medium">Sem imagem definida</span>
+          <span className="text-sm font-medium italic">Sem imagem definida</span>
         </div>
       )}
 
-      {/* 4. Corrigir Exibição do Input de Upload (JSX) */}
+      {/* 4. Controles de Administração (Apenas se logado) */}
       {user && (
-        <div className="upload-section">
+        <div className="absolute inset-0 z-20">
           <input
             type="file"
             accept="image/*"
@@ -145,20 +155,20 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
             className="hidden"
           />
           
-          {/* Overlay Escuro no Hover */}
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          {/* Overlay suave no hover para indicar interatividade */}
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="absolute top-4 right-4 bg-black/60 hover:bg-black/90 text-white p-3 rounded-full backdrop-blur-md transition-all flex items-center justify-center cursor-pointer pointer-events-auto z-20 shadow-xl border border-white/20 active:scale-90"
+            className="absolute top-4 right-4 bg-black/60 hover:bg-black/90 text-white p-3 rounded-full backdrop-blur-md transition-all flex items-center justify-center cursor-pointer shadow-xl border border-white/10 active:scale-95 disabled:opacity-50"
             title="Trocar imagem de capa"
           >
             {isUploading ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
-              <Camera size={20} className="transition-transform group-hover:rotate-12" />
+              <Camera size={20} className="transition-transform group-hover:rotate-6" />
             )}
           </button>
         </div>
