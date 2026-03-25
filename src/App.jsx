@@ -8,16 +8,18 @@ import Lancamento from './pages/Lancamento';
 import Dashboard from './pages/Dashboard';
 import logoImg from './assets/logo.png';
 
-// TopMenu: menu responsivo que fica dentro do main (horizontal em mobile, vertical em md)
+// TopMenu: menu responsivo dentro do main
 function TopMenu({ user }) {
   const location = useLocation();
   const isLancamento = location.pathname === '/';
 
   return (
-    <div className="flex flex-row md:flex-col justify-around md:justify-start w-full md:w-auto p-2 md:p-4 gap-1 md:gap-2">
+    <div className="flex flex-row md:flex-col justify-around md:justify-start w-full md:w-auto p-2 pb-safe md:p-4 gap-1 md:gap-2">
       <Link
         to="/"
-        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'}`}
+        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${
+          isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'
+        }`}
       >
         <PlusCircle size={24} />
         <span className="text-[11px] md:text-base font-medium">Lançamento</span>
@@ -25,7 +27,9 @@ function TopMenu({ user }) {
 
       <Link
         to={user ? '/dashboard' : '/login'}
-        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${!isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'}`}
+        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${
+          !isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'
+        }`}
       >
         <BarChart3 size={24} />
         <span className="text-[11px] md:text-base font-medium">{user ? 'Painel' : 'Acesso Restrito'}</span>
@@ -34,7 +38,7 @@ function TopMenu({ user }) {
   );
 }
 
-// MenuLateral: sidebar fixo (usa useLocation internamente para destacar rota)
+// MenuLateral: sidebar fixo
 function MenuLateral({ user }) {
   const location = useLocation();
   const isLancamento = location.pathname === '/';
@@ -54,14 +58,18 @@ function MenuLateral({ user }) {
         <div className="p-4 flex flex-row md:flex-col gap-2 overflow-x-auto">
           <Link
             to="/"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${isLancamento ? 'bg-blue-800' : 'hover:bg-blue-800/50'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+              isLancamento ? 'bg-blue-800' : 'hover:bg-blue-800/50'
+            }`}
           >
             <PlusCircle size={20} /> Lançamento
           </Link>
 
           <Link
             to={user ? '/dashboard' : '/login'}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${!isLancamento ? 'bg-blue-800' : 'hover:bg-blue-800/50'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+              !isLancamento ? 'bg-blue-800' : 'hover:bg-blue-800/50'
+            }`}
           >
             <BarChart3 size={20} /> {user ? 'Painel (Anciãos)' : 'Acesso Restrito'}
           </Link>
@@ -71,7 +79,11 @@ function MenuLateral({ user }) {
       <div className="p-4 border-t border-blue-800 text-sm">
         {user ? (
           <button
-            onClick={() => import('firebase/auth').then(m => m.signOut(auth)).catch(err => console.error('Erro ao sair:', err))}
+            onClick={() =>
+              import('firebase/auth')
+                .then(m => m.signOut(auth))
+                .catch(err => console.error('Erro ao sair:', err))
+            }
             className="flex items-center gap-2 text-blue-300 hover:text-white transition w-full"
           >
             <LogOut size={16} /> Sair
@@ -111,11 +123,11 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
         <MenuLateral user={user} />
-        <main className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8 w-full max-w-6xl mx-auto">
-          {/* TopMenu inserido dentro do main */}
+        <main className="flex-1 overflow-y-auto p-4 pb-28 md:p-8 md:pb-8 w-full max-w-6xl mx-auto md:ml-64">
+          {/* TopMenu dentro do main */}
           <TopMenu user={user} />
 
-          <div className="mt-4">
+          <div className="mt-2 md:mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Routes>
               <Route path="/" element={<Lancamento />} />
               <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />

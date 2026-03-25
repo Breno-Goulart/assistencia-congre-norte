@@ -11,14 +11,17 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const controlClass =
+    'w-full p-4 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all shadow-sm';
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/dashboard'); // Redireciona para área restrita após login
+      navigate('/dashboard');
     } catch (err) {
       setError('Credenciais inválidas ou sem permissão.');
     } finally {
@@ -36,7 +39,11 @@ export default function Login() {
         <p className="text-sm text-gray-500 text-center mt-1">Apenas anciãos designados.</p>
       </div>
 
-      {error && <div className="p-3 mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">{error}</div>}
+      {error && (
+        <div className="p-3 mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleLogin} className="space-y-5">
         <div className="space-y-1">
@@ -47,7 +54,7 @@ export default function Login() {
             autoComplete="username"
             inputMode="email"
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+            className={controlClass}
             required
           />
         </div>
@@ -58,17 +65,21 @@ export default function Login() {
             value={password}
             autoComplete="current-password"
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+            className={controlClass}
             required
           />
         </div>
-        
+
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-lg font-bold text-white bg-gray-900 hover:bg-black transition-colors flex justify-center items-center gap-2"
+          className="w-full py-4 mt-2 rounded-xl font-bold text-white text-lg flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar no Painel'}
+          {loading ? (
+            <Loader2 className="animate-spin" size={20} />
+          ) : (
+            'Entrar no Painel'
+          )}
         </button>
       </form>
     </div>

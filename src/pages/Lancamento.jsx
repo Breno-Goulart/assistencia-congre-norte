@@ -16,17 +16,19 @@ export default function Lancamento() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
 
-  // Cálculo automático do Total Geral
+  // cálculo automático do total
   const zoom = parseInt(formData.assistenciaZoom, 10) || 0;
   const presencial = parseInt(formData.assistenciaPresencial, 10) || 0;
   const totalGeral = zoom + presencial;
 
-  const inputBaseClass = "w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all";
-  const controlClass = "w-full p-4 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all shadow-sm";
+  const inputBaseClass =
+    'w-full p-4 text-xl text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all';
+  const controlClass =
+    'w-full p-4 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all shadow-sm';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -50,26 +52,23 @@ export default function Lancamento() {
       });
 
       setStatus({ type: 'success', message: 'Assistência registrada com sucesso!' });
-      // Limpa apenas os campos numéricos, mantendo data/tipo/indicadores
-      setFormData(prev => ({ ...prev, assistenciaZoom: '', assistenciaPresencial: '' }));
+      setFormData((prev) => ({ ...prev, assistenciaZoom: '', assistenciaPresencial: '' }));
 
-      // Feedback tátil em dispositivos que suportam vibrar
       if (window.navigator && window.navigator.vibrate) {
         try {
           window.navigator.vibrate([50, 50, 50]);
-        } catch (err) {
-          // ignore vibration errors
+        } catch {
+          // ignore
         }
       }
     } catch (error) {
-      console.error("Erro ao salvar:", error);
+      console.error('Erro ao salvar:', error);
       setStatus({ type: 'error', message: 'Falha ao registrar. Verifique sua conexão.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Limpa automaticamente a mensagem de status após 4s e previne vazamento de memória
   useEffect(() => {
     if (!status.message) return;
     const timer = setTimeout(() => setStatus({ type: '', message: '' }), 4000);
@@ -78,22 +77,6 @@ export default function Lancamento() {
 
   return (
     <div className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8">
-      {/* Hero / Banner */}
-      <div className="mb-8">
-        <div className="w-full h-40 sm:h-52 mb-4 rounded-2xl overflow-hidden shadow-sm bg-gray-200 relative">
-          <img
-            src="https://images.unsplash.com/photo-1438283173091-5dbf5c5a3206?q=80&w=800&auto=format&fit=crop"
-            alt="Reunião"
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent flex items-end p-5">
-            <h2 className="text-2xl font-bold text-white drop-shadow-md">Novo Lançamento</h2>
-          </div>
-        </div>
-        <p className="text-sm text-gray-500 px-1">Preencha os dados de assistência da reunião atual.</p>
-      </div>
-
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Novo Lançamento</h2>
         <p className="text-sm text-gray-500 mt-1">Registre a assistência da reunião.</p>
@@ -102,7 +85,11 @@ export default function Lancamento() {
       {status.message && (
         <div
           role="status"
-          className={`p-4 mb-6 rounded-lg text-sm font-medium ${status.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}
+          className={`p-4 mb-6 rounded-lg text-sm font-medium ${
+            status.type === 'error'
+              ? 'bg-red-50 text-red-700 border border-red-200'
+              : 'bg-green-50 text-green-700 border border-green-200'
+          }`}
         >
           {status.message}
         </div>
@@ -142,8 +129,6 @@ export default function Lancamento() {
             <label className="text-sm font-semibold text-gray-700">Zoom</label>
             <input
               type="number"
-              inputMode="numeric"
-              pattern="[0-9]*"
               min="0"
               max="1000"
               name="assistenciaZoom"
@@ -158,8 +143,6 @@ export default function Lancamento() {
             <label className="text-sm font-semibold text-gray-700">Presencial</label>
             <input
               type="number"
-              inputMode="numeric"
-              pattern="[0-9]*"
               min="0"
               max="1000"
               name="assistenciaPresencial"
@@ -179,7 +162,7 @@ export default function Lancamento() {
               name="indicadorEntrada"
               value={formData.indicadorEntrada}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white"
+              className={controlClass}
               required
             >
               <option value="" disabled>Selecione...</option>
@@ -195,7 +178,7 @@ export default function Lancamento() {
               name="indicadorAuditorio"
               value={formData.indicadorAuditorio}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none bg-white"
+              className={controlClass}
               required
             >
               <option value="" disabled>Selecione...</option>
