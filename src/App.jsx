@@ -8,37 +8,7 @@ import Lancamento from './pages/Lancamento.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import logoImg from './assets/logo.png';
 
-// TopMenu: menu responsivo dentro do main
-function TopMenu({ user }) {
-  const location = useLocation();
-  const isLancamento = location.pathname === '/';
-
-  return (
-    <div className="flex flex-row md:flex-col justify-around md:justify-start w-full md:w-auto p-2 pb-safe md:p-4 gap-1 md:gap-2">
-      <Link
-        to="/"
-        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${
-          isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'
-        }`}
-      >
-        <PlusCircle size={24} />
-        <span className="text-[11px] md:text-base font-medium">Lançamento</span>
-      </Link>
-
-      <Link
-        to={user ? '/dashboard' : '/login'}
-        className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl transition flex-1 md:flex-none ${
-          !isLancamento ? 'text-white bg-blue-800/80 md:bg-blue-800' : 'text-blue-300 hover:bg-blue-800/50'
-        }`}
-      >
-        <BarChart3 size={24} />
-        <span className="text-[11px] md:text-base font-medium">{user ? 'Painel' : 'Acesso Restrito'}</span>
-      </Link>
-    </div>
-  );
-}
-
-// MenuLateral: sidebar fixo
+// MenuLateral: sidebar fixo (MD+) e barra inferior (Mobile)
 function MenuLateral({ user }) {
   const location = useLocation();
   const isLancamento = location.pathname === '/';
@@ -46,16 +16,20 @@ function MenuLateral({ user }) {
   return (
     <nav className="bg-blue-900 text-white w-full md:w-64 flex md:flex-col justify-between shadow-xl flex-shrink-0 order-last md:order-first z-50 fixed bottom-0 md:relative">
       <div>
-        <div className="p-6 border-b border-blue-800 flex items-center gap-3">
-          <img src={logoImg} alt="Logo Assistência Norte" className="w-10 h-10 object-contain" />
-          <h1 className="text-xl font-bold">
+        {/* Logo e Título */}
+        <div className="p-4 md:p-6 md:border-b border-blue-800 flex items-center justify-center md:justify-start gap-3">
+          <Link to={user ? "/dashboard" : "/login"} title="Acesso Restrito">
+            <img src={logoImg} alt="Logo Assistência Norte" className="w-10 h-10 object-contain cursor-pointer" />
+          </Link>
+          <h1 className="hidden md:block text-xl font-bold">
             Assistência
             <br />
             <span className="text-sm font-normal text-blue-300">Norte</span>
           </h1>
         </div>
 
-        <div className="p-4 flex flex-row md:flex-col gap-2 overflow-x-auto">
+        {/* Links de Navegação */}
+        <div className="p-4 flex flex-row md:flex-col gap-2 overflow-x-auto justify-center">
           <Link
             to="/"
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
@@ -65,19 +39,22 @@ function MenuLateral({ user }) {
             <PlusCircle size={20} /> Lançamento
           </Link>
 
-          <Link
-            to={user ? '/dashboard' : '/login'}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-              !isLancamento ? 'bg-blue-800' : 'hover:bg-blue-800/50'
-            }`}
-          >
-            <BarChart3 size={20} /> {user ? 'Painel (Anciãos)' : 'Acesso Restrito'}
-          </Link>
+          {user && (
+            <Link
+              to="/dashboard"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                !isLancamento ? 'bg-blue-800' : 'hover:bg-blue-800/50'
+              }`}
+            >
+              <BarChart3 size={20} /> Painel (Anciãos)
+            </Link>
+          )}
         </div>
       </div>
 
-      <div className="p-4 border-t border-blue-800 text-sm">
-        {user ? (
+      {/* Botão Sair - Apenas Desktop */}
+      {user && (
+        <div className="hidden md:block p-4 border-t border-blue-800 text-sm">
           <button
             onClick={() =>
               import('firebase/auth')
@@ -88,12 +65,8 @@ function MenuLateral({ user }) {
           >
             <LogOut size={16} /> Sair
           </button>
-        ) : (
-          <Link to="/login" className="text-blue-300 hover:text-white transition">
-            Entrar
-          </Link>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   );
 }
@@ -123,10 +96,9 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
         <MenuLateral user={user} />
+        
+        {/* Conteúdo Principal */}
         <main className="flex-1 overflow-y-auto p-4 pb-28 md:p-8 md:pb-8 w-full max-w-6xl mx-auto md:ml-64">
-          {/* TopMenu dentro do main */}
-          <TopMenu user={user} />
-
           <div className="mt-2 md:mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Routes>
               <Route path="/" element={<Lancamento />} />
