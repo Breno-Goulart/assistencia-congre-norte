@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../../services/firebase.js';
 import { Image as ImageIcon, Camera, Loader2 } from 'lucide-react';
@@ -7,6 +7,7 @@ import { Image as ImageIcon, Camera, Loader2 } from 'lucide-react';
 /**
  * Componente ImageLoader
  * Carrega e exibe imagens do Firestore com suporte a cache local e upload (Admin).
+ * Utiliza setDoc com merge para garantir a criação do documento caso não exista.
  */
 export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner' }) {
   const cacheKey = `imgCache_${docPath}_${fieldName}`;
@@ -18,7 +19,7 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // 1. Monitoramento do Estado de Autenticação
+  // 1. Garantir Estado de Autenticação
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -26,13 +27,12 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
     return () => unsubscribe();
   }, []);
 
-  // 2. Sincronização em Tempo Real (Protegida)
+  // 2. Corrigir e Proteger o onSnapshot
   useEffect(() => {
     if (!docPath) return;
 
     const docRef = doc(db, docPath);
 
-    // Escuta mudanças no documento para atualizar a imagem automaticamente
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {
@@ -50,9 +50,9 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
       },
       (error) => {
         if (error.code === 'permission-denied') {
-          console.error("Acesso negado ao Firestore: verifique as regras de segurança.");
+          console.error("Acesso negado: sem permissão para ler a imagem.");
         } else {
-          console.error("Erro ao carregar imagem em tempo real:", error);
+          console.error("Erro ao carregar imagem:", error);
         }
         setLoading(false);
       }
@@ -61,14 +61,14 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
     return () => unsubscribe();
   }, [docPath, fieldName, cacheKey]);
 
-  // 3. Função de Upload com Validação de Segurança
+  // 3. Proteger a Função de Upload / setDoc (Merge)
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // VALIDAÇÃO: Bloqueia no frontend se não estiver autenticado
+    // Bloqueia no frontend antes de bater no Firebase
     if (!auth.currentUser || !user) {
-      console.error("Upload bloqueado: usuário não autenticado.");
+      console.error("Upload bloqueado: usuário não autenticado no Firebase.");
       return; 
     }
 
@@ -87,20 +87,18 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
           const base64 = event.target.result;
           const docRef = doc(db, docPath);
           
-          // Gravação direta no documento do Firestore
-          await updateDoc(docRef, { 
+          // Gravação no documento do Firestore criando-o se não existir (merge: true)
+          await setDoc(docRef, { 
             [fieldName]: base64,
             ultimaAtualizacao: new Date().toISOString(),
             atualizadoPor: user.uid
-          });
+          }, { merge: true });
           
           setIsUploading(false);
         } catch (error) {
-          console.error("Erro ao salvar no Firestore:", error);
+          console.error("Erro no fluxo de salvamento:", error);
           if (error.code === 'permission-denied') {
-            // Em ambiente iframe/canvas, alert() pode não ser visível, 
-            // mas mantemos o log para depuração técnica.
-            console.error("Permissão de escrita negada para este usuário.");
+            console.error("Acesso negado: você não tem permissão de escrita.");
           }
           setIsUploading(false);
         }
@@ -113,7 +111,7 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
 
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Erro crítico no fluxo de processamento:', error);
+      console.error('Erro crítico no processamento:', error);
       setIsUploading(false);
     }
   };
@@ -155,7 +153,7 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
             className="hidden"
           />
           
-          {/* Overlay suave no hover para indicar interatividade */}
+          {/* Overlay suave no hover */}
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           
           <button
