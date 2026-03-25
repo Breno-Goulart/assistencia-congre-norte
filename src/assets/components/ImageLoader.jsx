@@ -19,7 +19,7 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // 1. Garantir Estado de Autenticação
+  // 1. Monitoramento do Estado de Autenticação
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -27,12 +27,13 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
     return () => unsubscribe();
   }, []);
 
-  // 2. Corrigir e Proteger o onSnapshot
+  // 2. Sincronização em Tempo Real (Protegida)
   useEffect(() => {
     if (!docPath) return;
 
     const docRef = doc(db, docPath);
 
+    // Escuta mudanças no documento para atualizar a imagem automaticamente
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {
@@ -50,9 +51,9 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
       },
       (error) => {
         if (error.code === 'permission-denied') {
-          console.error("Acesso negado: sem permissão para ler a imagem.");
+          console.error("Acesso negado ao Firestore: verifique as regras de segurança.");
         } else {
-          console.error("Erro ao carregar imagem:", error);
+          console.error("Erro ao carregar imagem em tempo real:", error);
         }
         setLoading(false);
       }
@@ -61,12 +62,12 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
     return () => unsubscribe();
   }, [docPath, fieldName, cacheKey]);
 
-  // 3. Proteger a Função de Upload / setDoc (Merge)
+  // 3. Função de Upload com Validação de Segurança (Usa setDoc com merge)
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Bloqueia no frontend antes de bater no Firebase
+    // VALIDAÇÃO: Bloqueia no frontend se não estiver autenticado
     if (!auth.currentUser || !user) {
       console.error("Upload bloqueado: usuário não autenticado no Firebase.");
       return; 
@@ -87,7 +88,7 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
           const base64 = event.target.result;
           const docRef = doc(db, docPath);
           
-          // Gravação no documento do Firestore criando-o se não existir (merge: true)
+          // Gravação no documento usando setDoc com merge: true (Cria se não existir)
           await setDoc(docRef, { 
             [fieldName]: base64,
             ultimaAtualizacao: new Date().toISOString(),
@@ -111,7 +112,7 @@ export default function ImageLoader({ docPath, fieldName = 'url', alt = 'Banner'
 
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Erro crítico no processamento:', error);
+      console.error('Erro crítico no processamento da imagem:', error);
       setIsUploading(false);
     }
   };
