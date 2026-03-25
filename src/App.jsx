@@ -1,11 +1,11 @@
-// Ficheiro: src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
-import { Users, PlusCircle, BarChart3, LogOut } from 'lucide-react';
+import { PlusCircle, BarChart3, LogOut } from 'lucide-react';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth } from './services/firebase';
 import Lancamento from './pages/Lancamento';
 import Dashboard from './pages/Dashboard';
+import logoImg from './assets/logo.png';
 
 // Componente para detetar a rota ativa e pintar o menu
 function MenuLateral() {
@@ -16,8 +16,8 @@ function MenuLateral() {
     <nav className="bg-blue-900 text-white w-full md:w-64 flex flex-col justify-between shadow-xl flex-shrink-0">
       <div>
         <div className="p-6 border-b border-blue-800 flex items-center gap-3">
-          <Users size={28} className="text-blue-300" />
-          <h1 className="text-xl font-bold">Congregação<br/><span className="text-sm font-normal text-blue-300">Assistência</span></h1>
+          <img src={logoImg} alt="Logo Assistência Norte" className="w-10 h-10 object-contain" />
+          <h1 className="text-xl font-bold">Assistência<br/><span className="text-sm font-normal text-blue-300">Norte</span></h1>
         </div>
         <div className="p-4 flex flex-col gap-2">
           <Link to="/" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${isLancamento ? 'bg-blue-800' : 'hover:bg-blue-800/50'}`}>
